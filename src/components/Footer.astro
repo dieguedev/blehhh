@@ -5,9 +5,6 @@ import { useTranslations } from "../i18n/utils";
 
 const t = useTranslations(defaultLang);
 
-// Rendered server-side assuming defaultLang is active; the client script
-// (lang-switcher.ts) replaces this with the real non-active languages
-// once it knows the visitor's stored/browser preference.
 const fallbackLangs = (Object.keys(languages) as Lang[]).filter(
   (lang) => lang !== defaultLang,
 );
@@ -94,18 +91,24 @@ const fallbackLangs = (Object.keys(languages) as Lang[]).filter(
   .lang-switcher button {
     font: inherit;
     color: inherit;
-    background-color: #f9f5ec;
+    background: none;
     border: none;
-    border-radius: 999px;
-    padding: 0.5rem 0.9rem;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
     cursor: pointer;
+  }
+
+  .lang-switcher button:hover,
+  .lang-switcher button:focus-visible {
+    color: #6b5b3f;
   }
 
   @media (max-width: 640px) {
     .site-footer {
       flex-direction: column;
       justify-content: center;
-      gap: 4px;
+      gap: 24px;
     }
 
     .footer-links {

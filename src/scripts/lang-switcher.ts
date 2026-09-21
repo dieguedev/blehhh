@@ -16,6 +16,10 @@ function renderSwitcher(current: Lang) {
   const container = document.getElementById("lang-switcher");
   if (!container) return;
 
+  const scopeAttrs = [...container.attributes].filter((attr) =>
+    attr.name.startsWith("data-astro-cid-"),
+  );
+
   container.innerHTML = "";
 
   (Object.keys(languages) as Lang[])
@@ -24,6 +28,7 @@ function renderSwitcher(current: Lang) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = languages[lang];
+      scopeAttrs.forEach((attr) => button.setAttribute(attr.name, attr.value));
       button.addEventListener("click", () => applyLang(lang));
       container.appendChild(button);
     });
