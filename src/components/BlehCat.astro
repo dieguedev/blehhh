@@ -6,9 +6,6 @@ import blehSound from "../assets/bleh.mp3";
 
 <div class="stage">
   <div class="cat-wrap">
-    <div class="hint">
-      <span class="hint-text">haz click en el gato :)</span>
-    </div>
     <button
       id="bleh-button"
       class="bleh"
@@ -19,6 +16,9 @@ import blehSound from "../assets/bleh.mp3";
     >
       <img id="bleh-image" class="image" src={notBleh.src} alt="" />
     </button>
+    <div class="hint">
+      <span class="hint-text">haz click en el gato :)</span>
+    </div>
   </div>
   <audio id="bleh-audio" src={blehSound}></audio>
 </div>
@@ -29,43 +29,36 @@ import blehSound from "../assets/bleh.mp3";
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    flex: 1;
+    min-height: 0;
+    padding: 1rem;
+    box-sizing: border-box;
   }
 
   .cat-wrap {
-    position: relative;
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
     max-width: 100%;
   }
 
   .hint {
-    position: absolute;
-    top: 2%;
-    right: -8%;
-    z-index: 2;
     color: #000;
-    transform: rotate(25deg);
     pointer-events: none;
   }
 
   .hint-text {
-    font-family: "Fraunces", serif;
+    font-family: "Montserrat", sans-serif;
     font-weight: 400;
     font-size: clamp(1.25rem, 3.2vw, 2rem);
-    white-space: nowrap;
-  }
-
-  @media (max-width: 560px) {
-    .hint {
-      display: none;
-    }
+    text-align: center;
   }
 
   .bleh {
     display: block;
-    width: 800px;
-    height: 800px;
-    max-width: 100%;
+    width: min(650px, 75vw, 60vh);
+    aspect-ratio: 1 / 1;
     padding: 0;
     border: none;
     background: none;
@@ -91,7 +84,6 @@ import blehSound from "../assets/bleh.mp3";
   const notBlehSrc = button.dataset.notBleh!;
   const blehSrc = button.dataset.bleh!;
 
-  // Precargamos la imagen de bleh para que el swap sea instantáneo.
   new Image().src = blehSrc;
 
   let isAnimating = false;
