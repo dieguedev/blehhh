@@ -2,6 +2,10 @@
 import notBleh from "../assets/not-bleh.png";
 import blehhh from "../assets/blehhh.png";
 import blehSound from "../assets/bleh.mp3";
+import { defaultLang } from "../i18n/ui";
+import { useTranslations } from "../i18n/utils";
+
+const t = useTranslations(defaultLang);
 ---
 
 <div class="stage">
@@ -17,7 +21,7 @@ import blehSound from "../assets/bleh.mp3";
       <img id="bleh-image" class="image" src={notBleh.src} alt="" />
     </button>
     <div class="hint">
-      <span class="hint-text">haz click en el gato :)</span>
+      <span class="hint-text" data-i18n="hint.text">{t("hint.text")}</span>
     </div>
   </div>
   <audio id="bleh-audio" src={blehSound}></audio>

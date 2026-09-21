@@ -1,38 +1,78 @@
 ---
 import { Icon } from "astro-icon/components";
+import { defaultLang, languages, type Lang } from "../i18n/ui";
+import { useTranslations } from "../i18n/utils";
+
+const t = useTranslations(defaultLang);
+
+// Rendered server-side assuming defaultLang is active; the client script
+// (lang-switcher.ts) replaces this with the real non-active languages
+// once it knows the visitor's stored/browser preference.
+const fallbackLangs = (Object.keys(languages) as Lang[]).filter(
+  (lang) => lang !== defaultLang,
+);
 ---
 
 <footer class="site-footer">
-  <a
-    href="https://github.com/dieguedev"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <Icon name="mdi:github" width={24} height={24} />
-    <span>Github</span>
-  </a>
-  <a
-    href="https://buymeacoffee.com/diegue"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <Icon name="bmc-logo" width={24} height={24} />
-    <span>Support the domain :)</span>
-  </a>
+  <nav id="lang-switcher" class="lang-switcher" aria-label="Idioma">
+    {
+      fallbackLangs.map((lang) => (
+        <button type="button" data-lang={lang}>
+          {languages[lang]}
+        </button>
+      ))
+    }
+  </nav>
+  <div class="footer-links">
+    <a
+      href="https://github.com/dieguedev"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Icon name="mdi:github" width={24} height={24} />
+      <span>{t("footer.github")}</span>
+    </a>
+    <a
+      href="https://buymeacoffee.com/diegue"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Icon name="bmc-logo" width={24} height={24} />
+      <span data-i18n="footer.support">{t("footer.support")}</span>
+    </a>
+  </div>
+  <div class="footer-spacer" aria-hidden="true"></div>
 </footer>
 
 <style>
   .site-footer {
     display: flex;
     align-items: center;
-    align-self: center;
-    flex-shrink: 0;
+    justify-content: space-between;
+    align-self: stretch;
     flex-wrap: wrap;
     gap: 0.75rem;
-    padding: 0.5rem 0 1rem;
+    padding: 0.5rem 1rem 1rem;
     font-family: "Montserrat", sans-serif;
     font-size: 0.9rem;
     line-height: 1;
+  }
+
+  .footer-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .lang-switcher,
+  .footer-spacer {
+    flex: 1 0 0;
+  }
+
+  .footer-spacer {
+    min-width: 0;
   }
 
   .site-footer a {
@@ -42,5 +82,42 @@ import { Icon } from "astro-icon/components";
     background-color: #f9f5ec;
     border-radius: 999px;
     padding: 1rem;
+  }
+
+  .lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .lang-switcher button {
+    font: inherit;
+    color: inherit;
+    background-color: #f9f5ec;
+    border: none;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+  }
+
+  @media (max-width: 640px) {
+    .site-footer {
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .footer-links {
+      order: 1;
+    }
+
+    .lang-switcher {
+      order: 2;
+      flex: none;
+      justify-content: center;
+    }
+
+    .footer-spacer {
+      display: none;
+    }
   }
 </style>
