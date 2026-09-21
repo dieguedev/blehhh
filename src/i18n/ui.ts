@@ -1,4 +1,4 @@
-export const defaultLang = "es";
+export const defaultLang = "en";
 
 export const languages = {
   es: "Español",
