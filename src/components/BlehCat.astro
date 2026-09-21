@@ -37,6 +37,8 @@ const t = useTranslations(defaultLang);
     min-height: 0;
     padding: 1rem;
     box-sizing: border-box;
+    overflow: hidden;
+    container-type: size;
   }
 
   .cat-wrap {
@@ -45,6 +47,7 @@ const t = useTranslations(defaultLang);
     align-items: center;
     gap: 1rem;
     max-width: 100%;
+    max-height: 100%;
   }
 
   .hint {
@@ -55,13 +58,13 @@ const t = useTranslations(defaultLang);
   .hint-text {
     font-family: "Montserrat", sans-serif;
     font-weight: 400;
-    font-size: clamp(1.25rem, 3.2vw, 2rem);
+    font-size: clamp(1.25rem, 3.2cqw, 2rem);
     text-align: center;
   }
 
   .bleh {
     display: block;
-    width: min(650px, 75vw, 60vh);
+    width: min(650px, 75cqw, 55cqh);
     aspect-ratio: 1 / 1;
     padding: 0;
     border: none;
