@@ -1,8 +1,9 @@
 import { ui, languages, defaultLang, type Lang } from "../i18n/ui";
+import { interpolate } from "../i18n/utils";
 
 const STORAGE_KEY = "lang";
 
-function detectLang(): Lang {
+export function detectLang(): Lang {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored && stored in ui) return stored as Lang;
 
@@ -34,16 +35,21 @@ function renderSwitcher(current: Lang) {
     });
 }
 
-function applyLang(lang: Lang) {
+export function renderTranslations(lang: Lang) {
   const dict = ui[lang];
-
-  document.documentElement.lang = lang;
 
   document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((el) => {
     const key = el.dataset.i18n as keyof typeof dict;
-    if (key in dict) el.textContent = dict[key];
-  });
+    if (!(key in dict)) return;
 
+    const count = el.dataset.i18nCount;
+    el.textContent = count !== undefined ? interpolate(dict[key], { count }) : dict[key];
+  });
+}
+
+function applyLang(lang: Lang) {
+  document.documentElement.lang = lang;
+  renderTranslations(lang);
   renderSwitcher(lang);
   localStorage.setItem(STORAGE_KEY, lang);
 }

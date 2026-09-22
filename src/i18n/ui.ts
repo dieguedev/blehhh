@@ -10,18 +10,21 @@ export const ui = {
   es: {
     "site.title": "Bleh.cat | Blehhh",
     "hint.text": "haz click en el gato :)",
+    "counter.text": "{{count}} blehs en total",
     "footer.support": "Apoya el dominio :)",
     "footer.github": "Github",
   },
   ca: {
     "site.title": "Bleh.cat | Blehhh",
     "hint.text": "fes clic al gat :)",
+    "counter.text": "{{count}} blehs en total",
     "footer.support": "Dona suport al domini :)",
     "footer.github": "Github",
   },
   en: {
     "site.title": "Bleh.cat | Blehhh",
     "hint.text": "click the cat :)",
+    "counter.text": "{{count}} blehs in total",
     "footer.support": "Support the domain :)",
     "footer.github": "Github",
   },

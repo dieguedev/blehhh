@@ -3,9 +3,10 @@ import notBleh from "../assets/not-bleh.png";
 import blehhh from "../assets/blehhh.png";
 import blehSound from "../assets/bleh.mp3";
 import { defaultLang } from "../i18n/ui";
-import { useTranslations } from "../i18n/utils";
+import { useTranslations, interpolate } from "../i18n/utils";
 
 const t = useTranslations(defaultLang);
+const counterPlaceholder = interpolate(t("counter.text"), { count: "…" });
 ---
 
 <div class="stage">
@@ -22,6 +23,9 @@ const t = useTranslations(defaultLang);
     </button>
     <div class="hint">
       <span class="hint-text" data-i18n="hint.text">{t("hint.text")}</span>
+    </div>
+    <div class="counter" aria-live="polite">
+      <span id="bleh-count" data-i18n="counter.text" data-i18n-count="…">{counterPlaceholder}</span>
     </div>
   </div>
   <audio id="bleh-audio" src={blehSound}></audio>
@@ -62,6 +66,14 @@ const t = useTranslations(defaultLang);
     text-align: center;
   }
 
+  .counter {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    font-size: clamp(0.9rem, 2.2cqw, 1.25rem);
+    color: #666;
+    text-align: center;
+  }
+
   .bleh {
     display: block;
     width: min(650px, 75cqw, 55cqh);
@@ -93,16 +105,48 @@ const t = useTranslations(defaultLang);
 </style>
 
 <script>
+  import { detectLang, renderTranslations } from "../scripts/lang-switcher";
+
   const button = document.getElementById("bleh-button") as HTMLButtonElement;
   const image = document.getElementById("bleh-image") as HTMLImageElement;
   const audio = document.getElementById("bleh-audio") as HTMLAudioElement;
+  const countEl = document.getElementById("bleh-count") as HTMLSpanElement;
 
   const notBlehSrc = button.dataset.notBleh!;
   const blehSrc = button.dataset.bleh!;
 
+  const API_URL = "https://api.bleh.cat/bleh-count";
+
   new Image().src = blehSrc;
 
   let isAnimating = false;
+
+  function renderCount(count: string) {
+    countEl.dataset.i18nCount = count;
+    renderTranslations(detectLang());
+  }
+
+  async function fetchCount() {
+    try {
+      const res = await fetch(API_URL);
+      const { count } = await res.json();
+      renderCount(String(count));
+    } catch {
+      renderCount("?");
+    }
+  }
+
+  async function incrementCount() {
+    try {
+      const res = await fetch(`${API_URL}/increment`, { method: "POST" });
+      const { count } = await res.json();
+      renderCount(String(count));
+    } catch {
+      // keep the previous value shown
+    }
+  }
+
+  fetchCount();
 
   button.addEventListener("click", () => {
     if (isAnimating) return;
@@ -112,6 +156,7 @@ const t = useTranslations(defaultLang);
     image.src = blehSrc;
     audio.currentTime = 0;
     audio.play();
+    incrementCount();
 
     setTimeout(() => {
       image.src = notBlehSrc;
