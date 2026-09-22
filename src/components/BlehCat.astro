@@ -71,6 +71,15 @@ const t = useTranslations(defaultLang);
     background: none;
     overflow: hidden;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    user-select: none;
+  }
+
+  .bleh:focus,
+  .bleh:focus-visible {
+    outline: none;
   }
 
   .image {
