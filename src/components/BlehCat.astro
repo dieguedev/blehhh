@@ -2,6 +2,7 @@
 import notBleh from "../assets/not-bleh.png";
 import blehhh from "../assets/blehhh.png";
 import blehSound from "../assets/bleh.mp3";
+import hapiVideo from "../assets/hapi.mp4";
 import { defaultLang } from "../i18n/ui";
 import { useTranslations, interpolate } from "../i18n/utils";
 
@@ -20,16 +21,22 @@ const counterPlaceholder = interpolate(t("counter.text"), { count: "…" });
       data-bleh={blehhh.src}
     >
       <img id="bleh-image" class="image" src={notBleh.src} alt="" />
+      <video id="bleh-hapi" class="image" src={hapiVideo} playsinline hidden
+      ></video>
     </button>
     <div class="hint">
       <span class="hint-text" data-i18n="hint.text">{t("hint.text")}</span>
     </div>
     <div class="counter" aria-live="polite">
-      <span id="bleh-count" data-i18n="counter.text" data-i18n-count="…">{counterPlaceholder}</span>
+      <span id="bleh-count" data-i18n="counter.text" data-i18n-count="…"
+        >{counterPlaceholder}</span
+      >
     </div>
   </div>
   <audio id="bleh-audio" src={blehSound}></audio>
 </div>
+
+<canvas id="confetti-canvas"></canvas>
 
 <style>
   .stage {
@@ -76,6 +83,7 @@ const counterPlaceholder = interpolate(t("counter.text"), { count: "…" });
 
   .bleh {
     display: block;
+    position: relative;
     width: min(650px, 75cqw, 55cqh);
     aspect-ratio: 1 / 1;
     padding: 0;
@@ -96,11 +104,37 @@ const counterPlaceholder = interpolate(t("counter.text"), { count: "…" });
 
   .image {
     display: block;
-    position: relative;
+    position: absolute;
     top: -1px;
+    left: 0;
     width: 100%;
     height: calc(100% + 2px);
     object-fit: cover;
+  }
+
+  .image[hidden] {
+    display: none;
+  }
+
+  #bleh-hapi {
+    left: 1px;
+    width: calc(100% - 2px);
+  }
+
+  @media (max-width: 768px) {
+    #bleh-hapi {
+      left: -8px;
+      width: calc(100% + 16px);
+    }
+  }
+
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 2;
   }
 </style>
 
@@ -109,13 +143,16 @@ const counterPlaceholder = interpolate(t("counter.text"), { count: "…" });
 
   const button = document.getElementById("bleh-button") as HTMLButtonElement;
   const image = document.getElementById("bleh-image") as HTMLImageElement;
+  const hapi = document.getElementById("bleh-hapi") as HTMLVideoElement;
   const audio = document.getElementById("bleh-audio") as HTMLAudioElement;
   const countEl = document.getElementById("bleh-count") as HTMLSpanElement;
 
   const notBlehSrc = button.dataset.notBleh!;
   const blehSrc = button.dataset.bleh!;
 
-  const API_URL = "https://api.bleh.cat/bleh-count";
+  const API_URL = import.meta.env.DEV
+    ? "http://localhost:8787/bleh-count"
+    : "https://api.bleh.cat/bleh-count";
 
   new Image().src = blehSrc;
 
@@ -136,19 +173,190 @@ const counterPlaceholder = interpolate(t("counter.text"), { count: "…" });
     }
   }
 
-  async function incrementCount() {
+  async function incrementCount(): Promise<number | null> {
     try {
       const res = await fetch(`${API_URL}/increment`, { method: "POST" });
       const { count } = await res.json();
       renderCount(String(count));
+      return count;
     } catch {
-      // keep the previous value shown
+      return null;
     }
+  }
+
+  const confettiCanvas = document.getElementById(
+    "confetti-canvas",
+  ) as HTMLCanvasElement;
+  const confettiCtx = confettiCanvas.getContext("2d")!;
+
+  function resizeConfettiCanvas() {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+  resizeConfettiCanvas();
+  window.addEventListener("resize", resizeConfettiCanvas);
+
+  const CONFETTI_COUNT_DESKTOP = 80;
+  const CONFETTI_COUNT_MOBILE = 40;
+  const MOBILE_BREAKPOINT = 768;
+
+  const GRAVITY_CONFETTI = 0.3;
+  const DRAG_CONFETTI = 0.075;
+  const TERMINAL_VELOCITY = 3;
+
+  function randomRange(min: number, max: number) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function randomPastelColor() {
+    const hue = randomRange(0, 360);
+    return {
+      front: `hsl(${hue}, 85%, 82%)`,
+      back: `hsl(${hue}, 85%, 68%)`,
+    };
+  }
+
+  function initConfettoVelocity(
+    xRange: [number, number],
+    yRange: [number, number],
+  ) {
+    const x = randomRange(xRange[0], xRange[1]);
+    const range = yRange[1] - yRange[0] + 1;
+    let y =
+      yRange[1] -
+      Math.abs(randomRange(0, range) + randomRange(0, range) - range);
+    if (y >= yRange[1] - 1) {
+      y += Math.random() < 0.25 ? randomRange(1, 3) : 0;
+    }
+    return { x, y: -y };
+  }
+
+  class Confetto {
+    randomModifier = randomRange(0, 99);
+    color = randomPastelColor();
+    dimensions = { x: randomRange(5, 9), y: randomRange(8, 15) };
+    position: { x: number; y: number };
+    rotation = randomRange(0, 2 * Math.PI);
+    scale = { x: 1, y: 1 };
+    velocity: { x: number; y: number };
+
+    constructor(
+      originX: number,
+      originY: number,
+      spreadX: number,
+      spreadTop: number,
+      spreadBottom: number,
+    ) {
+      this.position = {
+        x: randomRange(originX - spreadX, originX + spreadX),
+        y: randomRange(originY + spreadTop, originY + spreadBottom),
+      };
+      this.velocity = initConfettoVelocity([-9, 9], [6, 11]);
+    }
+
+    update() {
+      this.velocity.x -= this.velocity.x * DRAG_CONFETTI;
+      this.velocity.y = Math.min(
+        this.velocity.y + GRAVITY_CONFETTI,
+        TERMINAL_VELOCITY,
+      );
+      this.velocity.x += Math.random() > 0.5 ? Math.random() : -Math.random();
+
+      this.position.x += this.velocity.x;
+      this.position.y += this.velocity.y;
+
+      this.scale.y = Math.cos((this.position.y + this.randomModifier) * 0.09);
+    }
+  }
+
+  const CONFETTI_SPREAD_X = 48;
+  const SPAWN_OFFSET_TOP = 8;
+  const SPAWN_OFFSET_BOTTOM = 32;
+
+  let confetti: Confetto[] = [];
+
+  function burstConfetti() {
+    const rect = button.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+    const count =
+      window.innerWidth <= MOBILE_BREAKPOINT
+        ? CONFETTI_COUNT_MOBILE
+        : CONFETTI_COUNT_DESKTOP;
+
+    for (let i = 0; i < count; i++) {
+      confetti.push(
+        new Confetto(
+          originX,
+          originY,
+          CONFETTI_SPREAD_X,
+          SPAWN_OFFSET_TOP,
+          SPAWN_OFFSET_BOTTOM,
+        ),
+      );
+    }
+  }
+
+  function renderConfetti() {
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+    confetti.forEach((confetto) => {
+      const width = confetto.dimensions.x * confetto.scale.x;
+      const height = confetto.dimensions.y * confetto.scale.y;
+
+      confettiCtx.translate(confetto.position.x, confetto.position.y);
+      confettiCtx.rotate(confetto.rotation);
+      confetto.update();
+
+      confettiCtx.fillStyle =
+        confetto.scale.y > 0 ? confetto.color.front : confetto.color.back;
+      confettiCtx.fillRect(-width / 2, -height / 2, width, height);
+      confettiCtx.setTransform(1, 0, 0, 1, 0, 0);
+    });
+
+    confetti = confetti.filter(
+      (confetto) => confetto.position.y < confettiCanvas.height,
+    );
+
+    window.requestAnimationFrame(renderConfetti);
+  }
+
+  renderConfetti();
+
+  const HAPI_FALLBACK_MS = 7000;
+
+  function resetToCat() {
+    hapi.pause();
+    hapi.hidden = true;
+    image.hidden = false;
+    image.src = notBlehSrc;
+    isAnimating = false;
+    button.disabled = false;
+  }
+
+  function playHapi() {
+    burstConfetti();
+    audio.pause();
+    audio.currentTime = 0;
+    image.hidden = true;
+    hapi.hidden = false;
+    hapi.currentTime = 0;
+    hapi.play().catch(() => {});
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resetToCat();
+    };
+
+    hapi.addEventListener("ended", finish, { once: true });
+    setTimeout(finish, HAPI_FALLBACK_MS);
   }
 
   fetchCount();
 
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     if (isAnimating) return;
     isAnimating = true;
     button.disabled = true;
@@ -156,7 +364,14 @@ const counterPlaceholder = interpolate(t("counter.text"), { count: "…" });
     image.src = blehSrc;
     audio.currentTime = 0;
     audio.play();
-    incrementCount();
+
+    const count = await incrementCount();
+    const isMilestone = count !== null && count > 0 && count % 100 === 0;
+
+    if (isMilestone) {
+      playHapi();
+      return;
+    }
 
     setTimeout(() => {
       image.src = notBlehSrc;
